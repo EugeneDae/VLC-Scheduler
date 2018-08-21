@@ -10,7 +10,7 @@ from utils import parse_time_interval
 from playlist import build_playlist
 from vlc import VLCLauncher, VLCHTTPClient
 
-VERSION = '1.1'
+VERSION = '0.1.0-alpha'
 REBUILD_TIMER = None
 REBUILD_SCHEDULE = ['00:00']
 
@@ -99,7 +99,7 @@ async def main_coro():
 def main():
     check_config()
     
-    logger.info('VLC Scheduler %s started.' % VERSION)
+    logger.info('VLC Scheduler v%s started.' % VERSION)
     
     prepare_schedule()
     
