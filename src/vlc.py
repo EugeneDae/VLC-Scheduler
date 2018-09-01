@@ -1,17 +1,27 @@
-import logging, time, subprocess
+import logging, time, asyncio
 
 import requests
 from urllib.parse import urljoin
 
 
-class VLCConnectionError(Exception):
+class VLCError(Exception):
+    pass
+
+
+class VLCConnectionError(VLCError):
+    pass
+
+
+class VLCExitError(VLCError):
     pass
 
 
 class VLCLauncher:
-    def __init__(self, config):
+    def __init__(self, config, debug=False):
         self.config = config
+        self.debug = debug
         self.base_url = 'http://' + config['host'] + ':' + str(config['port'])
+        self.process = None
     
     def check_connection(self, retries=0):
         for i in range(retries, -1, -1):
@@ -28,7 +38,7 @@ class VLCLauncher:
         
         raise VLCConnectionError('Failed to connect to the VLC web server.')
     
-    def launch(self):
+    async def launch(self):
         try:
             self.check_connection()
         except VLCConnectionError:
@@ -37,19 +47,36 @@ class VLCLauncher:
             logging.info('VLC is already running.')
             return
         
-        logging.info('Launching VLC with HTTP server at %s' % self.config['path'])
+        logging.info('Launching VLC with HTTP server at %s.' % self.config['path'])
         
-        self.instance = subprocess.Popen(
-            [
-                self.config['path'],
-                '--extraintf', 'http',
-                '--http-host', self.config['host'],
-                '--http-port', str(self.config['port']),
-                '--http-password', str(self.config['password'])
-            ]
-        )
+        command = [
+            self.config['path'],
+            '--extraintf', 'http',
+            '--http-host', self.config['host'],
+            '--http-port', str(self.config['port']),
+            '--http-password', str(self.config['password']),
+            '--repeat', '--image-duration', '-1'
+        ]
         
+        kwargs = {}
+        
+        if self.debug:
+            command.extend(('--log-verbose', '3'))
+        else:
+            kwargs['stderr'] = asyncio.subprocess.DEVNULL
+            kwargs['stdout'] = asyncio.subprocess.DEVNULL
+        
+        self.process = await asyncio.create_subprocess_exec(*command, **kwargs)
+        time.sleep(1)
         self.check_connection(3)
+        return self.process
+    
+    async def watch_exit(self):
+        if not self.process:
+            return
+        
+        await self.process.wait()
+        raise VLCExitError('VLC was closed.')
 
 
 class VLCHTTPClient:
@@ -57,16 +84,6 @@ class VLCHTTPClient:
         self.session = requests.session()
         self.base_url = 'http://' + config['host'] + ':' + str(config['port'])
         self.session.auth = ('', config['password'])
-        
-        logging.info('Trying to connect to the VLC web server.')
-        try:
-            self._request('requests/status.xml')
-        except Exception as e:
-            raise VLCConnectionError(
-                'Cannot connect to the VLC web server. '
-                'Is it running at %s?' % self.base_url
-            ) from e
-        logging.info('Connection to the VLC web server succeeded.')
     
     def _request(self, path, **kwargs):
         resp = self.session.get(urljoin(self.base_url, path), **kwargs)
@@ -84,6 +101,9 @@ class VLCHTTPClient:
         params = ('command=' + command + '&' +
                   '&'.join('%s=%s' % (k, v) for k, v in params.items()))
         return self._request('requests/status.xml', params=params)
+    
+    def status(self):
+        return self._request('requests/status.json')
     
     def add(self, uri):
         return self._command('in_play', {'input': uri})

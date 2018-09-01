@@ -1,9 +1,11 @@
 import sys
 
-DEBUG = 0
+DEBUG = 1
+
+if getattr(sys, 'frozen', False):
+    DEBUG = 0
 
 VLC = {
-    'launch': True,
     'host': '127.0.0.1',
     'port': 8080,
     'password': 'vlcremote'
@@ -18,8 +20,8 @@ SOURCES = []
 
 FILENAME_WITH_A_DATE_REGEX = '^(\d\d)-(\d\d)-(\d\d\d\d).*'
 
-ALLOWED_EXTENSIONS = ['mp4', 'avi', 'mov']
+ALLOWED_EXTENSIONS = ['mp4', 'avi', 'mov', 'png', 'jpg']
 
-REBUILD_DELAY = 30
+SOURCE_MIXING_FUNCTION = 'zip_equally'
 
-MIXING_FUNCTION = 'chain'
+REBUILD_DELAY = 1

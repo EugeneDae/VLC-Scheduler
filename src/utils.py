@@ -36,3 +36,10 @@ def parse_time_interval(string):
         raise ValueError
     
     return match[1], match[2]
+
+
+def is_time_within_interval(ref_time, start_time, end_time):
+    if start_time < end_time:
+        return ref_time >= start_time and ref_time <= end_time
+    else:  # over midnight
+        return ref_time >= start_time or ref_time <= end_time
