@@ -44,7 +44,7 @@ class VLCLauncher:
         except VLCConnectionError:
             pass
         else:
-            logging.info('VLC is already running.')
+            logging.warning('VLC is already running.')
             return
         
         logging.info('Launching VLC with HTTP server at %s.' % self.config['path'])

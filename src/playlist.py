@@ -7,14 +7,8 @@ class Playlist:
     _sources = []
     _items = []
     
-    class Event:
-        def __init__(self, **kwargs):
-            for k, v in kwargs.items():
-                setattr(self, k, v)
-    
     def __init__(self, config):
         self.config = config
-        self.callbacks = set()
         
         if config.SOURCE_MIXING_FUNCTION == 'chain':
             from itertools import chain as source_mixing_function
@@ -51,7 +45,6 @@ class Playlist:
             
             if not utils.is_time_within_interval(now_time, start_time, end_time):
                 result['active'] = False
-                logging.info('Skipped source: %s (reason: playing_time).' % result['path'])
         
         return result
     
@@ -66,6 +59,8 @@ class Playlist:
         for source in self.get_sources():
             if source['active']:
                 yield source
+            else:
+                logging.warning('Skipped source: %s (reason: playing_time).' % source['path'])
     
     def get_rebuild_schedule(self):
         schedule = ['00:00']
@@ -100,7 +95,7 @@ class Playlist:
                 )
                 
                 if date != datetime.date.today():
-                    logging.info(
+                    logging.warning(
                         'Skipped file: %s ' % path +
                         '(reason: filename contains a date that is not today).'
                     )
@@ -108,41 +103,42 @@ class Playlist:
             
             yield {'path': path, 'item_play_duration': source['item_play_duration']}
     
-    def rebuild(self):
+    def rebuild(self, ignore_playing_time=False):
         self._sources = []
         self._items = []
-        contents = [list(self.get_source_contents(s)) for s in self.get_active_sources()]
+        
+        if ignore_playing_time:
+            active_sources = list(self.get_sources())
+        else:
+            active_sources = list(self.get_active_sources())
+        
+        contents = [list(self.get_source_contents(s)) for s in active_sources]
         
         for item in self.source_mixing_function(*contents):
             self._items.append(item)
         
         self._items_cycle = itertools.cycle(self._items)
         
-        if len(self._items) > 0:        
+        if len(self._items) > 0:
             logging.info(
-                'The playlist has been rebuilt from %i file(s).' % 
-                len([i for c in contents for i in c]) +
+                'The playlist has been rebuilt from %i source(s) and %i file(s).' %
+                (len(active_sources), len([i for c in contents for i in c])) +
                 '\n\t' + '\n\t'.join([i['path'] for i in self._items])
             )
         else:
-            logging.info('The playlist appears to be empty.')
-        
-        self.fire(type='rebuild')
+            if not ignore_playing_time and self.config.IGNORE_PLAYING_TIME_IF_PLAYLIST_IS_EMPTY:
+                logging.warning(
+                    'The playlist appears to be empty, but '
+                    'IGNORE_PLAYING_TIME_IF_PLAYLIST_IS_EMPTY is set. '
+                    'Rebuilding again.'
+                )
+                
+                return self.rebuild(ignore_playing_time=True)
+            else:
+                logging.warning('The playlist appears to be empty.')
     
     def get_items(self):
         return self._items
     
     def get_next_in_cycle(self):
         return next(self._items_cycle)
-    
-    def subscribe(self, callback):
-        self.callbacks.add(callback)
-    
-    def unsubscribe(self, callback):
-        self.callbacks.discard(callback)
-    
-    def fire(self, **attrs):
-        e = self.Event(source=self, **attrs)
-        
-        for fn in self.callbacks:
-            fn(e)

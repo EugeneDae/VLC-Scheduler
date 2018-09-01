@@ -1,4 +1,4 @@
-import os, sys, logging
+import os, sys
 
 import yaml
 
@@ -82,6 +82,13 @@ def initialize(*args, **kwargs):
         config = build_config()
     
     if logger is None:
+        try:
+            import coloredlogs
+        except ImportError:
+            coloredlogs = None
+        finally:
+            import logging
+        
         logger = logging.getLogger(LOGGER_NAME)
         
         params = {
@@ -93,8 +100,12 @@ def initialize(*args, **kwargs):
             params['level'] = logging.DEBUG
         else:
             params['level'] = logging.INFO
-            
-        logging.basicConfig(**params)
+        
+        if coloredlogs:
+            params['fmt'] = params.pop('format')
+            coloredlogs.install(**params)
+        else:
+            logging.basicConfig(**params)
 
 
 initialize()

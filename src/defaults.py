@@ -24,4 +24,4 @@ ALLOWED_EXTENSIONS = ['mp4', 'avi', 'mov', 'png', 'jpg']
 
 SOURCE_MIXING_FUNCTION = 'zip_equally'
 
-REBUILD_DELAY = 1
+IGNORE_PLAYING_TIME_IF_PLAYLIST_IS_EMPTY = False

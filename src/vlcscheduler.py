@@ -1,5 +1,4 @@
 import os, sys, asyncio, traceback
-from threading import Timer
 
 import click, schedule
 from watchgod import awatch
@@ -24,36 +23,9 @@ def check_config():
         return sys.exit('Invalid path to VLC: %s.' % config.VLC['path'])
 
 
-def playlist_event_handler(event):
-    global PLAYER
-    
-    playlist = event.source
-    
-    if len(playlist.get_items()) == 0:
-        PLAYER.empty()
-
-
 async def watchgod_coro(path, action):
-    global PLAYER
-    global REBUILD_TIMER
-    REBUILD_TIMER = None
-    
-    async for changes in awatch(path, watcher_cls=VLCSchedulerSourceWatcher):
-        logger.info('%s changed, the playlist will be rebuilt in %i seconds.' % (
-            path, config.REBUILD_DELAY
-        ))
-        
-        try:
-            REBUILD_TIMER.cancel()
-        except (AttributeError, NameError):
-            pass
-        
-        REBUILD_TIMER = Timer(config.REBUILD_DELAY, action)
-        REBUILD_TIMER.start()
-        
-        # Prevent VLC from hanging
-        if not os.path.isfile(PLAYER.current_item['path']):
-            PLAYER.empty()
+    async for changes in awatch(path, watcher_cls=VLCSchedulerSourceWatcher, debounce=3600):
+        action()
 
 
 async def schedule_coro():
@@ -62,61 +34,82 @@ async def schedule_coro():
         await asyncio.sleep(1)
 
 
-async def player_coro(playlist):
-    global PLAYER
+async def player_coro(player, playlist, post_rebuild_events):
+    current_item_path = None
+    
+    file_error_count = 0
+    file_error_threshold = 2
+    
+    playlist.rebuild()
     
     while True:
+        # Too many errors => wait for the next rebuild
+        if file_error_count > file_error_threshold:
+            logger.warning('Too many files in the playlist do not exist anymore.')
+            file_error_count = 0
+            player.empty()
+            current_item_path = None
+            await post_rebuild_events.get()
+        
         try:
             item = playlist.get_next_in_cycle()
         except StopIteration:
-            await asyncio.sleep(1)
+            # If the playlist is empty, empty the VLC playlist and
+            # wait for the next rebuild
+            player.empty()
+            current_item_path = None
+            await post_rebuild_events.get()
         else:
+            # If the file doesn't exist anymore, don't feed it to VLC
             if not os.path.isfile(item['path']):
-                logging.info('%s does not exist anymore, skipping.' % item['path'])
+                logger.warning('%s does not exist anymore, skipping.' % item['path'])
+                file_error_count += 1
                 continue
             
-            logger.info('Now playing %(path)s for %(item_play_duration)i seconds.' % item)
-            PLAYER.add(item['path'])
-            PLAYER.current_item = item
-            await asyncio.sleep(item['item_play_duration'])
-
-
-async def test_coro(playlist):
-    pass
-    # await playlist.wait_for_rebuild()
-    # print('!!!!!!!!!!!!!!!!!!!!!!!!!')
+            if item['path'] != current_item_path:
+                logger.info('Now playing %(path)s for %(item_play_duration)i seconds.' % item)
+                player.add(item['path'])
+            
+            current_item_path = item['path']
+            
+            _, pending = await asyncio.wait(
+                [asyncio.sleep(item['item_play_duration']), post_rebuild_events.get()],
+                return_when=asyncio.FIRST_COMPLETED
+            )
+            
+            for task in pending:
+                task.cancel()
 
 
 async def main_coro():
-    global PLAYER
-    
     check_config()
     
     # Setup VLC
     launcher = vlc.VLCLauncher(config.VLC, debug=config.DEBUG)
     await launcher.launch()
-    PLAYER = vlc.VLCHTTPClient(config.VLC)
-    PLAYER.current_item = {'path': None}  # dirty, but works
+    player = vlc.VLCHTTPClient(config.VLC)
     
     # Setup the playlist
     playlist = Playlist(config)
-    playlist.subscribe(playlist_event_handler)
-    playlist.rebuild()
+    post_rebuild_events = asyncio.Queue()
+    
+    def rebuild():
+        post_rebuild_events.put_nowait(playlist.rebuild())
     
     # Setup the rebuild schedule
     rebuild_schedule = playlist.get_rebuild_schedule()
     for time in rebuild_schedule:
-        schedule.every().day.at(time).do(playlist.rebuild)
+        schedule.every().day.at(time).do(rebuild)
     logger.info('Rebuilds will run at: %s.' % ', '.join(rebuild_schedule))
     
     # Setup coroutines
     tasks = [
         launcher.watch_exit(), schedule_coro(),
-        player_coro(playlist), test_coro(playlist)
+        player_coro(player, playlist, post_rebuild_events)
     ]
     
     for source in config.SOURCES:
-        tasks.append(watchgod_coro(source['path'], action=playlist.rebuild))
+        tasks.append(watchgod_coro(source['path'], action=rebuild))
     
     try:
         await asyncio.gather(*tasks)
@@ -130,8 +123,6 @@ async def main_coro():
 @click.command()
 @click.version_option(VERSION)
 def main():
-    global REBUILD_TIMER
-    
     logger.info('VLC Scheduler v%s started.' % VERSION)
     
     if sys.platform == 'win32':
@@ -145,11 +136,6 @@ def main():
     finally:
         loop.close()
         logger.info('VLC Scheduler stopped.')
-        
-        try:
-            REBUILD_TIMER.cancel()
-        except (AttributeError, NameError):
-            pass
 
 
 if __name__ == '__main__':
