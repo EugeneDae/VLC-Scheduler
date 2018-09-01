@@ -1,3 +1,7 @@
 *.pyc
 /vlcscheduler.yaml
+/vlcscheduler.spec
 /temp
+/venv
+/build
+/dist
