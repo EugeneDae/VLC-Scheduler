@@ -40,6 +40,7 @@ async def player_coro(player, playlist, post_rebuild_events):
     file_error_count = 0
     file_error_threshold = 2
     
+    player.empty()
     playlist.rebuild()
     
     while True:
