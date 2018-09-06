@@ -103,7 +103,7 @@ class VLCHTTPClient:
         return self._request('requests/status.xml', params=params)
     
     def status(self):
-        return self._request('requests/status.json')
+        return self._request('requests/status.json').json()
     
     def add(self, uri):
         return self._command('in_play', {'input': uri})
@@ -131,3 +131,13 @@ class VLCHTTPClient:
     
     def empty(self):
         return self._command('pl_empty')
+    
+    def toggle_repeat(self):
+        return self._command('pl_repeat')
+    
+    def repeat(self, value=None):
+        if value is None:
+            return self._command('pl_repeat')
+        
+        if self.status()['repeat'] != value:
+            return self._command('pl_repeat')

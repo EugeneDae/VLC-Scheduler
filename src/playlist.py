@@ -30,7 +30,7 @@ class Playlist:
         result['active'] = True
         result['path'] = source['path']
         result['shuffle'] = bool(source.get('shuffle', False))
-        result['item_play_duration'] = int(source.get('item_play_duration', 60))
+        result['item_play_duration'] = int(source.get('item_play_duration', 0))
         result['playing_time'] = source.get('playing_time', [])
         
         if result['playing_time']:

@@ -8,7 +8,7 @@ from watchers import VLCSchedulerSourceWatcher
 from playlist import Playlist
 import vlc
 
-VERSION = '0.2.0-alpha'
+VERSION = '0.2.1-alpha'
 
 
 def check_config():
@@ -68,8 +68,18 @@ async def player_coro(player, playlist, post_rebuild_events):
                 continue
             
             if item['path'] != current_item_path:
-                logger.info('Now playing %(path)s for %(item_play_duration)i seconds.' % item)
                 player.add(item['path'])
+                
+                if item['item_play_duration'] == 0:
+                    await asyncio.sleep(0.25)
+                    length = player.status().get('length', 0)
+                    
+                    if length <= 0:
+                        length = config.IMAGE_PLAY_DURATION
+                    
+                    item['item_play_duration'] = length
+                
+                logger.info('Now playing %(path)s for %(item_play_duration)i seconds.' % item)
             
             current_item_path = item['path']
             
