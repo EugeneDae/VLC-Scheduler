@@ -1,4 +1,5 @@
 import os, re, logging, datetime, random, itertools
+from types import SimpleNamespace
 
 import utils
 
@@ -26,25 +27,25 @@ class Playlist:
         return re.compile(self.config.FILENAME_WITH_A_DATE_REGEX)
     
     def prepare_source(self, source):
-        result = {}
-        result['active'] = True
-        result['path'] = source['path']
-        result['shuffle'] = bool(source.get('shuffle', False))
-        result['item_play_duration'] = int(source.get('item_play_duration', 0))
-        result['playing_time'] = source.get('playing_time', [])
+        result = SimpleNamespace()
+        result.active = True
+        result.path = source['path']
+        result.shuffle = bool(source.get('shuffle', False))
+        result.item_play_duration = int(source.get('item_play_duration', 0))
+        result.playing_time = source.get('playing_time', [])
         
-        if result['playing_time']:
+        if result.playing_time:
             start_time, end_time = (
                 datetime.datetime.strptime(i, '%H:%M').time() for i
-                in utils.parse_time_interval(result['playing_time'])
+                in utils.parse_time_interval(result.playing_time)
             )
             
-            result['playing_time'] = start_time, end_time
+            result.playing_time = start_time, end_time
             
             now_time = datetime.datetime.now().time()
             
             if not utils.is_time_within_interval(now_time, start_time, end_time):
-                result['active'] = False
+                result.active = False
         
         return result
     
@@ -57,16 +58,16 @@ class Playlist:
     
     def get_active_sources(self):
         for source in self.get_sources():
-            if source['active']:
+            if source.active:
                 yield source
             else:
-                logging.warning('Skipped source: %s (reason: playing_time).' % source['path'])
+                logging.warning('Skipped source: %s (reason: playing_time).' % source.path)
     
     def get_rebuild_schedule(self):
         schedule = ['00:00']
         
         for source in self.get_sources():
-            for time in source['playing_time']:
+            for time in source.playing_time:
                 time_str = time.strftime('%H:%M')  # this is really stupid
                 
                 if time_str not in schedule:
@@ -76,10 +77,10 @@ class Playlist:
     
     def get_source_contents(self, source):
         paths = list(utils.list_files_with_extensions(
-            source['path'], self.allowed_extensions
+            source.path, self.allowed_extensions
         ))
         
-        if source['shuffle']:
+        if source.shuffle:
             random.shuffle(paths)
         else:
             paths = sorted(paths)
@@ -101,7 +102,7 @@ class Playlist:
                     )
                     continue
             
-            yield {'path': path, 'item_play_duration': source['item_play_duration']}
+            yield SimpleNamespace(path=path, source=source)
     
     def rebuild(self, ignore_playing_time=False):
         self._sources = []
@@ -123,7 +124,7 @@ class Playlist:
             logging.info(
                 'The playlist has been rebuilt from %i source(s) and %i file(s).' %
                 (len(active_sources), len([i for c in contents for i in c])) +
-                '\n\t' + '\n\t'.join([i['path'] for i in self._items])
+                '\n\t' + '\n\t'.join([i.path for i in self._items])
             )
         else:
             if not ignore_playing_time and self.config.IGNORE_PLAYING_TIME_IF_PLAYLIST_IS_EMPTY:

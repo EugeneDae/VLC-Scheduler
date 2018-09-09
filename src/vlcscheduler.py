@@ -41,7 +41,6 @@ async def player_coro(player, playlist, post_rebuild_events):
     file_error_threshold = 2
     
     player.empty()
-    playlist.rebuild()
     
     while True:
         # Too many errors => wait for the next rebuild
@@ -62,29 +61,31 @@ async def player_coro(player, playlist, post_rebuild_events):
             await post_rebuild_events.get()
         else:
             # If the file doesn't exist anymore, don't feed it to VLC
-            if not os.path.isfile(item['path']):
-                logger.warning('%s does not exist anymore, skipping.' % item['path'])
+            if not os.path.isfile(item.path):
+                logger.warning('%s does not exist anymore, skipping.' % item.path)
                 file_error_count += 1
                 continue
             
-            if item['path'] != current_item_path:
-                player.add(item['path'])
+            play_duration = item.source.item_play_duration
+            
+            if item.path != current_item_path:
+                player.add(item.path)
                 
-                if item['item_play_duration'] == 0:
+                if play_duration == 0:
                     await asyncio.sleep(0.25)
                     length = player.status().get('length', 0)
                     
                     if length <= 0:
                         length = config.IMAGE_PLAY_DURATION
                     
-                    item['item_play_duration'] = length
+                    play_duration = length
                 
-                logger.info('Now playing %(path)s for %(item_play_duration)i seconds.' % item)
+                logger.info('Now playing %s for %i seconds.' % (item.path, play_duration))
             
-            current_item_path = item['path']
+            current_item_path = item.path
             
             _, pending = await asyncio.wait(
-                [asyncio.sleep(item['item_play_duration']), post_rebuild_events.get()],
+                [asyncio.sleep(play_duration), post_rebuild_events.get()],
                 return_when=asyncio.FIRST_COMPLETED
             )
             
@@ -104,8 +105,15 @@ async def main_coro():
     playlist = Playlist(config)
     post_rebuild_events = asyncio.Queue()
     
-    def rebuild():
-        post_rebuild_events.put_nowait(playlist.rebuild())
+    # Rebuild
+    def rebuild(emit_event=True):
+        res = playlist.rebuild()
+        
+        if emit_event:
+            post_rebuild_events.put_nowait(res)
+        
+    
+    rebuild(False)
     
     # Setup the rebuild schedule
     rebuild_schedule = playlist.get_rebuild_schedule()
