@@ -20,7 +20,7 @@ SOURCES = []
 
 FILENAME_WITH_A_DATE_REGEX = '^(\d\d)-(\d\d)-(\d\d\d\d).*'
 
-ALLOWED_EXTENSIONS = ['mp4', 'avi', 'mov', 'png', 'jpg']
+ALLOWED_EXTENSIONS = ['mp4', 'avi', 'mov', 'mkv', 'webm', 'png', 'jpg']
 
 SOURCE_MIXING_FUNCTION = 'zip_equally'
 
