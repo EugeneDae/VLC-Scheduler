@@ -24,7 +24,7 @@ class Playlist:
         elif source_mixing_function == 'chain':
             self._source_mixing_function = itertools.chain
         else:
-            raise ValueError('Unsupported source_mixing_function')
+            raise ValueError('Unsupported <source_mixing_function>')
     
     def prepare_source(self, source):
         prepared = types.SimpleNamespace(
@@ -126,7 +126,7 @@ class Playlist:
             if use_only_active_sources and self._ignore_playing_time_if_empty:
                 logging.warning((
                     'Building playlist %s while ignoring '
-                    'playing_time of the sources.'
+                    '<playing_time> of the sources.'
                 ) % self.name)
                 return self.build(use_only_active_sources=False)
             else:
