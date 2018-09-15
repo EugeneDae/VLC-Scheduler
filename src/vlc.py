@@ -27,9 +27,11 @@ class VLCLauncher:
         for i in range(retries, -1, -1):
             try:
                 resp = requests.get(self.base_url, timeout=5)
-            except requests.exceptions.ConnectionError:
+            except requests.exceptions.RequestException as e:
                 if i > 0:
-                    logging.debug('Connection attempt failed. Will retry in 3 seconds.')
+                    logging.warning(
+                        'Connection attempt failed because of: %s. Retry in 3 seconds.' % str(e)
+                    )
                     time.sleep(3)
                     continue
             else:
@@ -44,7 +46,7 @@ class VLCLauncher:
         except VLCConnectionError:
             pass
         else:
-            logging.warning('VLC is already running.')
+            logging.warning('Found existing VLC instance.')
             return
         
         logging.info('Launching VLC with HTTP server at %s.' % self.config['path'])

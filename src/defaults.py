@@ -18,7 +18,7 @@ elif sys.platform == 'darwin':
 
 SOURCES = []
 
-FILENAME_WITH_A_DATE_REGEX = '^(\d\d)-(\d\d)-(\d\d\d\d).*'
+FILENAME_WITH_A_DATE_PATTERN = '^(\d\d)-(\d\d)-(\d\d\d\d).*'
 
 ALLOWED_EXTENSIONS = ['mp4', 'avi', 'mov', 'mkv', 'webm', 'png', 'jpg']
 

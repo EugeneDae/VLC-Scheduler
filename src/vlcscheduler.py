@@ -8,23 +8,30 @@ from watchers import VLCSchedulerSourceWatcher
 from playlist import Playlist
 import vlc
 
-VERSION = '0.2.1-alpha'
+VERSION = '0.3.0 (beta)'
 
 
 def check_config():
     if len(config.SOURCES) == 0:
-        return sys.exit('Please define at least one source in the configuration file.')
+        raise RuntimeError('Please define at least one source in the configuration file.')
     
     for source in config.SOURCES:
         if not os.path.isdir(source['path']):
-            return sys.exit('The source path is not a directory: %s.' % source['path'])
+            raise RuntimeError('The source path is not a directory: %s.' % source['path'])
+        
+        if source.get('special') and source.get('play_every_minutes'):
+            raise RuntimeError(
+                'Simultaneous use of <special> and <play_every_minutes> for a '
+                'single source is currently not supported.'
+            )
     
     if not os.path.isfile(config.VLC['path']):
-        return sys.exit('Invalid path to VLC: %s.' % config.VLC['path'])
+        raise RuntimeError('Invalid path to VLC: %s.' % config.VLC['path'])
 
 
 async def watchgod_coro(path, action):
     async for changes in awatch(path, watcher_cls=VLCSchedulerSourceWatcher, debounce=3600):
+        logger.info('Changes detected in %s.' % path)
         action()
 
 
@@ -34,60 +41,62 @@ async def schedule_coro():
         await asyncio.sleep(1)
 
 
-async def player_coro(player, playlist, post_rebuild_events):
-    current_item_path = None
-    
-    file_error_count = 0
-    file_error_threshold = 2
-    
-    player.empty()
+async def player_coro(player, rebuild_events_queue, extra_items_queue):
+    playlist = None
     
     while True:
-        # Too many errors => wait for the next rebuild
-        if file_error_count > file_error_threshold:
-            logger.warning('Too many files in the playlist do not exist anymore.')
-            file_error_count = 0
-            player.empty()
+        if not playlist:
             current_item_path = None
-            await post_rebuild_events.get()
+            player.empty()
+            playlist = await rebuild_events_queue.get()
         
         try:
-            item = playlist.get_next_in_cycle()
+            try:
+                item = extra_items_queue.get_nowait()
+            except asyncio.QueueEmpty:
+                item = playlist.get_next()
         except StopIteration:
-            # If the playlist is empty, empty the VLC playlist and
-            # wait for the next rebuild
-            player.empty()
-            current_item_path = None
-            await post_rebuild_events.get()
+            # The playlist is empty, so throw it away
+            playlist = None
+            continue
         else:
-            # If the file doesn't exist anymore, don't feed it to VLC
+            # VLC hangs horribly when asked to open a non-existing file
             if not os.path.isfile(item.path):
-                logger.warning('%s does not exist anymore, skipping.' % item.path)
-                file_error_count += 1
+                logger.warning((
+                    '%s does not exist anymore, but normally this shouldn’t happen. '
+                    'Stopping until next rebuild.'
+                ) % item.path)
+                playlist = None
                 continue
             
             play_duration = item.source.item_play_duration
             
             if item.path != current_item_path:
                 player.add(item.path)
-                
-                if play_duration == 0:
-                    await asyncio.sleep(0.25)
-                    length = player.status().get('length', 0)
-                    
-                    if length <= 0:
-                        length = config.IMAGE_PLAY_DURATION
-                    
-                    play_duration = length
-                
-                logger.info('Now playing %s for %i seconds.' % (item.path, play_duration))
             
-            current_item_path = item.path
+            if play_duration == 0:
+                await asyncio.sleep(0.25)
+                play_duration = player.status().get('length', 0)
+                
+                if play_duration <= 0:
+                    play_duration = config.IMAGE_PLAY_DURATION
             
-            _, pending = await asyncio.wait(
-                [asyncio.sleep(play_duration), post_rebuild_events.get()],
+            if item.path != current_item_path:
+                logger.info('Playing %s for %i seconds.' % (item.path, play_duration))
+                current_item_path = item.path
+            
+            finished, pending = await asyncio.wait(
+                [asyncio.sleep(play_duration), rebuild_events_queue.get()],
                 return_when=asyncio.FIRST_COMPLETED
             )
+            
+            for task in finished:
+                result = task.result()
+                
+                if result:  # we have a new playlist
+                    playlist = result
+                    current_item_path = None
+                    player.empty()
             
             for task in pending:
                 task.cancel()
@@ -101,42 +110,96 @@ async def main_coro():
     await launcher.launch()
     player = vlc.VLCHTTPClient(config.VLC)
     
-    # Setup the playlist
-    playlist = Playlist(config)
-    post_rebuild_events = asyncio.Queue()
+    # Setup playlists
+    default_playlist_config = {
+        'allowed_extensions': config.ALLOWED_EXTENSIONS,
+        'filename_with_a_date_pattern': config.FILENAME_WITH_A_DATE_PATTERN
+    }
     
+    primary_playlist = Playlist(
+        name='PRIMARY', **default_playlist_config,
+        ignore_playing_time_if_empty=config.IGNORE_PLAYING_TIME_IF_PLAYLIST_IS_EMPTY
+    )
+    special_playlist = Playlist(
+        name='SPECIAL', **default_playlist_config
+    )
+    adverts_playlist = Playlist(
+        name='ADS', **default_playlist_config,
+        source_mixing_function='chain'
+    )
+    
+    for source in config.SOURCES:
+        if source.get('play_every_minutes'):
+            adverts_playlist.add_source(source)
+        elif source.get('special'):
+            special_playlist.add_source(source)
+        else:
+            primary_playlist.add_source(source)
+    
+    # Queues
+    rebuild_events_queue = asyncio.Queue()
+    periodic_items_queue = asyncio.Queue()
+
     # Rebuild
-    def rebuild(emit_event=True):
-        res = playlist.rebuild()
+    def rebuild():
+        rebuild_events_queue.empty()
+        periodic_items_queue.empty()
+        schedule.clear('ads')
         
-        if emit_event:
-            post_rebuild_events.put_nowait(res)
+        primary_playlist.build()
+        special_playlist.build()
         
+        # Choose current playlist
+        if special_playlist.is_empty():
+            selected_playlist = primary_playlist
+            adverts_playlist.build()
+            
+            if primary_playlist.is_empty():
+                # Only run ads if there's other content
+                if not adverts_playlist.is_empty():
+                    logger.warning('Ads will run only when there is other content.')
+            else:
+                for item in adverts_playlist.get_items():
+                    logger.info((
+                        'Scheduling {0.path} to run every {0.source.play_every_minutes} minute(s).'
+                    ).format(item))
+                    
+                    def enqueue(item=item):
+                        return periodic_items_queue.put_nowait(item)
+                    
+                    schedule.every(item.source.play_every_minutes).minutes.do(enqueue).tag('ads')
+        else:
+            logger.info('Playing %s playlist instead of everything else.' % special_playlist.name)
+            selected_playlist = special_playlist
+        
+        rebuild_events_queue.put_nowait(selected_playlist)
     
-    rebuild(False)
+    rebuild()
     
     # Setup the rebuild schedule
-    rebuild_schedule = playlist.get_rebuild_schedule()
-    for time in rebuild_schedule:
-        schedule.every().day.at(time).do(rebuild)
-    logger.info('Rebuilds will run at: %s.' % ', '.join(rebuild_schedule))
+    rebuild_schedule = ['00:00']
+    for playlist in (primary_playlist, special_playlist, adverts_playlist):
+        times = playlist.get_rebuild_schedule()
+        for time in times:
+            time_str = time.strftime('%H:%M')  # schedule doesn't support time objects
+            if time_str not in rebuild_schedule:
+                rebuild_schedule.append(time_str)
+    
+    for time_str in rebuild_schedule:
+        schedule.every().day.at(time_str).do(rebuild)
+    
+    logger.info('Rebuilds will run at: %s.' % ', '.join(sorted(rebuild_schedule)))
     
     # Setup coroutines
     tasks = [
         launcher.watch_exit(), schedule_coro(),
-        player_coro(player, playlist, post_rebuild_events)
+        player_coro(player, rebuild_events_queue, periodic_items_queue)
     ]
     
     for source in config.SOURCES:
         tasks.append(watchgod_coro(source['path'], action=rebuild))
     
-    try:
-        await asyncio.gather(*tasks)
-    except vlc.VLCError as e:
-        if config.DEBUG:
-            logger.fatal(traceback.format_exc())
-        else:
-            logger.fatal(str(e))
+    await asyncio.gather(*tasks)
 
 
 @click.command()
@@ -152,6 +215,11 @@ def main():
     
     try:
         loop.run_until_complete(main_coro())
+    except Exception as e:
+        if config.DEBUG:
+            logger.fatal(traceback.format_exc())
+        else:
+            logger.fatal(str(e)) 
     finally:
         loop.close()
         logger.info('VLC Scheduler stopped.')

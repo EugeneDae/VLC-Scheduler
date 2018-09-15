@@ -106,6 +106,9 @@ def initialize(*args, **kwargs):
             coloredlogs.install(**params)
         else:
             logging.basicConfig(**params)
-
+        
+        # Other loggers
+        if not config.DEBUG:
+            logging.getLogger('schedule').setLevel(logging.WARNING)
 
 initialize()
