@@ -8,7 +8,9 @@ if getattr(sys, 'frozen', False):
 VLC = {
     'host': '127.0.0.1',
     'port': 8080,
-    'password': 'vlcremote'
+    'password': 'vlcremote',
+    'extraintf': 'http:luaintf',
+    'options': []
 }
 
 if sys.platform.startswith('win'):
