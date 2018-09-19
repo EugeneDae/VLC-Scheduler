@@ -53,12 +53,12 @@ class VLCLauncher:
         
         command = [
             self.config['path'],
-            '--extraintf', 'http',
+            '--extraintf', self.config['extraintf'],
             '--http-host', self.config['host'],
             '--http-port', str(self.config['port']),
             '--http-password', str(self.config['password']),
             '--repeat', '--image-duration', '-1'
-        ]
+        ] + self.config['options']
         
         kwargs = {}
         
@@ -102,16 +102,21 @@ class VLCHTTPClient:
         # https://forum.videolan.org/viewtopic.php?f=16&t=145695
         params = ('command=' + command + '&' +
                   '&'.join('%s=%s' % (k, v) for k, v in params.items()))
+        
         return self._request('requests/status.xml', params=params)
+    
+    def _format_uri(self, uri):
+        # VLC only understands urlencoded =
+        return uri.replace('=', '%3D')
     
     def status(self):
         return self._request('requests/status.json').json()
     
     def add(self, uri):
-        return self._command('in_play', {'input': uri})
+        return self._command('in_play', {'input': self._format_uri(uri)})
     
     def enqueue(self, uri):
-        return self._command('in_enqueue', {'input': uri})
+        return self._command('in_enqueue', {'input': self._format_uri(uri)})
     
     def play(self, uid=None):
         if uid:
