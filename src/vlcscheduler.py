@@ -8,7 +8,7 @@ from watchers import VLCSchedulerSourceWatcher
 from playlist import Playlist
 import vlc
 
-VERSION = '0.3.0 (beta)'
+VERSION = '0.3.1 (beta)'
 
 
 def check_config():
