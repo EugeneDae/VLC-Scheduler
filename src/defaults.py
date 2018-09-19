@@ -20,7 +20,9 @@ SOURCES = []
 
 FILENAME_WITH_A_DATE_PATTERN = '^(\d\d)-(\d\d)-(\d\d\d\d).*'
 
-ALLOWED_EXTENSIONS = ['mp4', 'avi', 'mov', 'mkv', 'webm', 'png', 'jpg']
+# All extensions should be in tuples (not lists), lowercase, prepended with a dot
+MEDIA_EXTENSIONS = ('.mp4', '.avi', '.mov', '.mkv', '.webm', '.png', '.jpg')
+PLAYLIST_EXTENSIONS = ('.xspf', )
 
 SOURCE_MIXING_FUNCTION = 'zip_equally'
 

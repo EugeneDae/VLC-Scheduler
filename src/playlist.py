@@ -14,7 +14,7 @@ class Playlist:
         # Process kwargs
         self.add_source(*sources)
         self.name = name
-        self._allowed_extensions = ['.' + i.lower() for i in allowed_extensions]
+        self._allowed_extensions = allowed_extensions
         self._filename_with_a_date_regex = re.compile(filename_with_a_date_pattern)
         self._ignore_playing_time_if_empty = ignore_playing_time_if_empty
         

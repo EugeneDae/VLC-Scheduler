@@ -72,6 +72,10 @@ async def player_coro(player, rebuild_events_queue, extra_items_queue):
             play_duration = item.source.item_play_duration
             
             if item.path != current_item_path:
+                # VLC occasionally chokes on playlists and keeps playing what it was playing
+                if item.path.lower().endswith(config.PLAYLIST_EXTENSIONS):
+                    player.empty()
+                
                 player.add(item.path)
             
             if play_duration == 0:
@@ -112,7 +116,7 @@ async def main_coro():
     
     # Setup playlists
     default_playlist_config = {
-        'allowed_extensions': config.ALLOWED_EXTENSIONS,
+        'allowed_extensions': config.MEDIA_EXTENSIONS + config.PLAYLIST_EXTENSIONS,
         'filename_with_a_date_pattern': config.FILENAME_WITH_A_DATE_PATTERN
     }
     
@@ -139,7 +143,7 @@ async def main_coro():
     # Queues
     rebuild_events_queue = asyncio.Queue()
     periodic_items_queue = asyncio.Queue()
-
+    
     # Rebuild
     def rebuild():
         rebuild_events_queue.empty()

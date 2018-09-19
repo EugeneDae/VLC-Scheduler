@@ -6,8 +6,6 @@ TIME_INTERVAL_REGEX = re.compile('(\d\d:\d\d).?-.?(\d\d:\d\d)')
 
 
 def list_files_with_extensions(path, extensions):
-    extensions = tuple(extensions)
-    
     for entry in os.scandir(path):
         if entry.name.lower().endswith(extensions) and entry.is_file():
             yield entry.path
