@@ -1,4 +1,4 @@
-import os, sys
+import os, sys, traceback
 
 import yaml
 
@@ -111,4 +111,34 @@ def initialize(*args, **kwargs):
         if not config.DEBUG:
             logging.getLogger('schedule').setLevel(logging.WARNING)
 
-initialize()
+
+def check_config():
+    global config
+    
+    if len(config.SOURCES) == 0:
+        raise RuntimeError('Please define at least one source in the configuration file.')
+    
+    for source in config.SOURCES:
+        if not os.path.isdir(source['path']):
+            raise RuntimeError('The source path is not a directory: %s.' % source['path'])
+        
+        if source.get('special') and source.get('play_every_minutes'):
+            raise RuntimeError(
+                'Simultaneous use of <special> and <play_every_minutes> for a '
+                'single source is currently not supported.'
+            )
+    
+    if not os.path.isfile(config.VLC['path']):
+        raise RuntimeError('Invalid path to VLC: %s.' % config.VLC['path'])
+
+
+try:
+    initialize()
+    check_config()
+except Exception as e:    
+    if config.DEBUG:
+        logger.fatal(traceback.format_exc())
+    else:
+        logger.fatal(str(e))
+    
+    sys.exit(1)

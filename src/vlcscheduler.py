@@ -8,25 +8,7 @@ from watchers import VLCSchedulerSourceWatcher
 from playlist import Playlist
 import vlc
 
-VERSION = '0.3.1 (beta)'
-
-
-def check_config():
-    if len(config.SOURCES) == 0:
-        raise RuntimeError('Please define at least one source in the configuration file.')
-    
-    for source in config.SOURCES:
-        if not os.path.isdir(source['path']):
-            raise RuntimeError('The source path is not a directory: %s.' % source['path'])
-        
-        if source.get('special') and source.get('play_every_minutes'):
-            raise RuntimeError(
-                'Simultaneous use of <special> and <play_every_minutes> for a '
-                'single source is currently not supported.'
-            )
-    
-    if not os.path.isfile(config.VLC['path']):
-        raise RuntimeError('Invalid path to VLC: %s.' % config.VLC['path'])
+VERSION = '0.3.2 (beta)'
 
 
 async def watchgod_coro(path, action):
@@ -107,8 +89,6 @@ async def player_coro(player, rebuild_events_queue, extra_items_queue):
 
 
 async def main_coro():
-    check_config()
-    
     # Setup VLC
     launcher = vlc.VLCLauncher(config.VLC, debug=config.DEBUG)
     await launcher.launch()
@@ -223,7 +203,7 @@ def main():
         if config.DEBUG:
             logger.fatal(traceback.format_exc())
         else:
-            logger.fatal(str(e)) 
+            logger.fatal(str(e))
     finally:
         loop.close()
         logger.info('VLC Scheduler stopped.')
