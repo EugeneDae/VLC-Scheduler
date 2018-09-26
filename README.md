@@ -1,6 +1,6 @@
 # VLC Scheduler
 
-**[DOWNLOAD](/releases/latest/)** (current version: 0.3.2)
+**[DOWNLOAD](https://github.com/EugeneDae/VLC-Scheduler/releases/latest/)** (current version: 0.3.2)
 
 Do you have a TV screen that plays some media content non-stop? Do you want some of the content to play in the morning, and the rest during the rest of the day? Do you want to add new content to VLC as easily as dragging the file into a folder? VLC Scheduler, which is a tiny companion to the world’s best open source media player VLC, was made exactly for such purposes.
 
@@ -29,7 +29,7 @@ You can share a directory with TV screen content over the local network (for exa
 - VLC Scheduler is still a “beta” and may contain terrible bugs.
 
 ## Installation & configuration
-1. [Download the latest version](/releases/latest/). **vlcscheduler-win.zip** is for Windows, **vlcscheduler-mac.zip** is for macOS. If you’re on Linux, see **Running & building the script**.
+1. [Download the latest version](https://github.com/EugeneDae/VLC-Scheduler/releases/latest/). **vlcscheduler-win.zip** is for Windows, **vlcscheduler-mac.zip** is for macOS. If you’re on Linux, see **Running & building the script**.
 2. Edit vlcscheduler.yaml as per your needs.
 
 ### vlcscheduler.yaml
