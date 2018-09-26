@@ -34,7 +34,7 @@ You can share a directory with TV screen content over the local network (for exa
 
 ### vlcscheduler.yaml
 
-vlcscheduler.yaml must reside at the same level as the binary. *(Advanced users, who want to move the configuration file to another location, should set the environment variable `VLCSCHEDULER_YAML` to the full path that includes the filename of the configuration file)*.
+vlcscheduler.yaml must reside at the same level as the program itself. *(Advanced users, who want to move the configuration file to another location, should set the environment variable `VLCSCHEDULER_YAML` to the full path that includes the filename of the configuration file)*.
 
 The configuration must be expressed in YAML — if you don’t know anything about this format, [read up on it a bit](https://docs.ansible.com/ansible/latest/reference_appendices/YAMLSyntax.html).
 
@@ -59,15 +59,15 @@ Not hard, right? [See also example.yaml](/docs/example.yaml).
 
 #### Per source configuration
 
-`path` — *(required)* absolute path to the directory with media files. `~/` and variables are not supported.
+**`path`** — *(required)* absolute path to the directory with media files. `~/` and variables are not supported.
 
-`playing_time: HH:MM-HH:MM` — *(optional)* the time interval during which the media files from the directory should be played. Use 24-hour clock. Example: `playing_time: 09:00-22:00` (from 9 AM to 10 PM).
+**`playing_time: HH:MM-HH:MM`** — *(optional)* the time interval during which the media files from the directory should be played. Use 24-hour clock. Example: `playing_time: 09:00-22:00` (from 9 AM to 10 PM).
 
-`random: true/false` — *(optional)* if set to `true`, shuffles the media files from each directory. If set to `false`, VLC Scheduler will get the files in alphabetic order. Default: `false`.
+**`random: true/false`** — *(optional)* if set to `true`, shuffles the media files from each directory. If set to `false`, VLC Scheduler will get the files in alphabetic order. Default: `false`.
 
-`special: true/false` — *(optional)* if set to `true`, marks a directory as special. Special directories are meant to stay empty most of the time. When a media file is added to such directory, VLC Scheduler puts aside all non-special content and only plays that file until it’s removed from its directory. Default: `false`.
+**`special: true/false`** — *(optional)* if set to `true`, marks a directory as special. Special directories are meant to stay empty most of the time. When a media file is added to such directory, VLC Scheduler puts aside all non-special content and only plays that file until it’s removed from its directory. Default: `false`.
 
-`item_play_duration: seconds`— *(optional)* how much screen time each media file (an image or a video) should be given.
+**`item_play_duration: seconds`**— *(optional)* how much screen time each media file (an image or a video) should be given.
 
 - If `item_play_duration` is not set, each video will play until the end and each image will play for the time defined by `image_play_duration` (which is — by default — 60 seconds). Note that `image_play_duration` is a top-level (general) parameter.
 - If a video is shorter than `item_play_duration`, it’ll play over again until `item_play_duration` runs out.
@@ -75,21 +75,21 @@ Not hard, right? [See also example.yaml](/docs/example.yaml).
 
 Example: `item_play_duration: 120` (120 seconds = 2 minutes).
 
-`play_every_minutes: NN` (minutes) — *(optional)* the content will be played only after NN minutes. Such content is internally referred to as “ads”. If there is no content other than the “ads”, VLC Scheduler won’t play anything. VLC Scheduler doesn’t “pause” the currently playing media file to play “ads” — instead it waits for the media file to complete. The use of this parameter in conjunction with `special: true` is not supported. Example: `play_every_minutes: 30`.
+**`play_every_minutes: minutes`** — *(optional)* the content will be played only after X minutes. Such content is internally referred to as “ads”. If there is no content other than the “ads”, VLC Scheduler won’t play anything. VLC Scheduler doesn’t “pause” the currently playing media file to play “ads” — instead it waits for the media file to complete. The use of this parameter in conjunction with `special: true` is not supported. Example: `play_every_minutes: 30`.
 
 #### General configuration
 
-`source_mixing_function: "function_name"` — *(optional)* If you don’t want VLC Scheduler to ensure equal occurrence of the sources in the playlist, change this to `chain`. Default value: `zip_equally`.
+**`source_mixing_function: "function_name"`** — *(optional)* If you don’t want VLC Scheduler to ensure equal occurrence of the sources in the playlist, change this to `chain`. Default value: `zip_equally`.
 
-`media_extensions: [...]` — *(optional)* a list of filename extensions that defines the kinds of **media files** that VLC Scheduler should be looking for when scanning the directories listed in `sources`. Note that each filename extension should be prepended with a dot and written in lowercase. Note that VLC Scheduler does not understand that `.jpeg` and `.jpg` belong to the same file format. Example: `media_extensions: ['.mp4', '.avi', '.jpeg', '.jpg']`. For the default list of extensions see [defaults.py](/src/defaults.py).
+**`media_extensions: [...]`** — *(optional)* a list of filename extensions that defines the kinds of **media files** that VLC Scheduler should be looking for when scanning the directories listed in `sources`. Note that each filename extension should be prepended with a dot and written in lowercase. Note that VLC Scheduler does not understand that `.jpeg` and `.jpg` belong to the same file format. Example: `media_extensions: ['.mp4', '.avi', '.jpeg', '.jpg']`. For the default list of extensions see [defaults.py](/src/defaults.py).
 
-`playlist_extensions: [...]` — *(optional)* a list of filename extensions that defines the kinds of **playlist files** that VLC Scheduler should be looking for when scanning the directories listed in `sources`. Note that each filename extension should be prepended with a dot and written in lowercase. Example: `playlist_extensions: ['.xspf', '.m3u']`. For the default list of extensions see [defaults.py](/src/defaults.py).
+**`playlist_extensions: [...]`** — *(optional)* a list of filename extensions that defines the kinds of **playlist files** that VLC Scheduler should be looking for when scanning the directories listed in `sources`. Note that each filename extension should be prepended with a dot and written in lowercase. Example: `playlist_extensions: ['.xspf', '.m3u']`. For the default list of extensions see [defaults.py](/src/defaults.py).
 
-`ignore_playing_time_if_playlist_is_empty: true/false` — *(optional)* if set to `true`, VLC Scheduler will ignore `playing_time` of the sources if the playlist is empty. Default value: `false`.
+**`ignore_playing_time_if_playlist_is_empty: true/false`** — *(optional)* if set to `true`, VLC Scheduler will ignore `playing_time` of the sources if the playlist is empty. Default value: `false`.
 
-`image_play_duration: seconds` — *(optional)* how long an image should be displayed on the screen if `item_play_duration` is not set for the source. Default value: `60`.
+**`image_play_duration: seconds`** — *(optional)* how long an image should be displayed on the screen if `item_play_duration` is not set for the source. Default value: `60`.
 
-`vlc` — *(optional)* a dictionary of VLC-related parameters.
+**`vlc`** — *(optional)* a dictionary of VLC-related parameters.
 
 ```
 vlc:
