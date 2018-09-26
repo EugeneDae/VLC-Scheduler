@@ -1,8 +1,10 @@
 # VLC Scheduler
 
-**[DOWNLOAD](https://github.com/EugeneDae/VLC-Scheduler/releases/latest/)** (current version: 0.3.2)
+**[DOWNLOAD](/releases/latest/)** (current version: 0.3.2)
 
 Do you have a TV screen that plays some media content non-stop? Do you want some of the content to play in the morning, and the rest during the rest of the day? Do you want to add new content to VLC as easily as dragging the file into a folder? VLC Scheduler, which is a tiny companion to the world’s best open source media player VLC, was made exactly for such purposes.
+
+![VLC Scheduler](/docs/screenshot.jpg)
 
 VLC Scheduler works with directories rather than individual media files. It scans the directories specified in its configuration file for media content, composes its own playlist and “feeds” it to VLC file-by-file.
 
@@ -12,10 +14,10 @@ You can share a directory with TV screen content over the local network (for exa
 - **Directory watching.**
 - **Equal intermixing.** No matter how big or small the directories with media content are, VLC Scheduler will ensure that their media files appear equally often in the playlist. For example, if you have two directories — one with several files (`A1, A2, A3, A4`) and one with just a single file (`B1`) — the resulting playlist would be: `A1, B1, A2, B1, A3, B1, A4, B1`. This behavior can be changed using the `source_mixing_function` parameter.
 - **Basic scheduling.** Set playing hours for specific directories using the `playing_hours` parameter. Also — if the filename of a media file contains a date in the format that VLC Scheduler can recognize (e.g. `23-02-2019_birthday.mp4`), the file will only be played during that day.
-- **Directories for special occasions.** If a directory that is marked “special” (`special: true`) contains one or more files, VLC Scheduler will only play those files — and nothing else — until they’re removed from the “special” directory. You might find this feature useful if you want to occasionally show something of immediate importance while temporarily putting aside all “regular” content.
+- **Directories for special occasions.** If a directory that is marked “special” (`special: true`) contains one or more files, VLC Scheduler will only play those files — and nothing else — until they’re removed from the “special” directory. You will find this feature useful on the occasions when you need to air something of immediate importance, while putting aside all “regular” content.
 - **Plays long videos in short pieces.** For example, if you want to use your TV screen as a digital photo frame that alternates between different views, and each view is an hours long video file, use the `item_play_duration` parameter. Set it to `600` (seconds) and VLC Scheduler will change the view every 10 minutes. VLC will play the video from where it was left off if you configure VLC to [always continue playback](https://www.vlchelp.com/restart-continue-playback-ask/). 
-- **Supports images (JPEG, PNG...)** Use `image_play_duration` or `item_play_duration` to control how long they should be shown.
-- **Supports live streams.** Turn your TV screen into a “digital window” that shows the live picture from various places around the world. Show a live stream, then in five minutes switch to a video on the hard drive, then show another live stream and so on — VLC Scheduler can arrange all of that. (See [docs/dam-square.xspf](https://github.com/EugeneDae/VLC-Scheduler/tree/master/docs/dam-square.xspf)).
+- **Supports images (JPEG, PNG...)** Use `image_play_duration` or `item_play_duration` to control for how long they should be shown.
+- **Supports live streams.** Turn your TV screen into a “digital window” that shows the live picture from various places around the world. Show a live stream, then in five minutes switch to a video on the hard drive, then show another live stream and so on — VLC Scheduler can arrange that. (See [docs/dam-square.xspf](/docs/dam-square.xspf)).
 - **Show content every X minutes** — useful for ads, commercials, safety instructions etc, that you don’t want to show too often.
 - Written in Python, VLC Scheduler can be used on Windows, macOS and Linux. The binaries for Windows and macOS are provided for download. Linux users should see **Running & building the script**.
 
@@ -27,7 +29,7 @@ You can share a directory with TV screen content over the local network (for exa
 - VLC Scheduler is still a “beta” and may contain terrible bugs.
 
 ## Installation & configuration
-1. [Download the latest version](https://github.com/EugeneDae/VLC-Scheduler/releases/latest/). **vlcscheduler-win.zip** is for Windows, **vlcscheduler-mac.zip** is for macOS. If you’re on Linux, see **Running & building the script**.
+1. [Download the latest version](/releases/latest/). **vlcscheduler-win.zip** is for Windows, **vlcscheduler-mac.zip** is for macOS. If you’re on Linux, see **Running & building the script**.
 2. Edit vlcscheduler.yaml as per your needs.
 
 ### vlcscheduler.yaml
@@ -53,9 +55,7 @@ sources:
       playing_time: 09:00-22:00
 ```
 
-Not hard, right?
-
-[See also example.yaml](https://github.com/EugeneDae/VLC-Scheduler/tree/master/docs/example.yaml).
+Not hard, right? [See also example.yaml](/docs/example.yaml).
 
 #### Per source configuration
 
@@ -81,9 +81,9 @@ Example: `item_play_duration: 120` (120 seconds = 2 minutes).
 
 `source_mixing_function: "function_name"` — *(optional)* If you don’t want VLC Scheduler to ensure equal occurrence of the sources in the playlist, change this to `chain`. Default value: `zip_equally`.
 
-`media_extensions: [...]` — *(optional)* a list of filename extensions that defines the kinds of **media files** that VLC Scheduler should be looking for when scanning the directories listed in `sources`. Note that each filename extension should be prepended with a dot and written in lowercase. Note that VLC Scheduler does not understand that `.jpeg` and `.jpg` belong to the same file format. Example: `media_extensions: ['.mp4', '.avi', '.jpeg', '.jpg']`. For the default list of extensions see [defaults.py](https://github.com/EugeneDae/VLC-Scheduler/blob/master/src/defaults.py).
+`media_extensions: [...]` — *(optional)* a list of filename extensions that defines the kinds of **media files** that VLC Scheduler should be looking for when scanning the directories listed in `sources`. Note that each filename extension should be prepended with a dot and written in lowercase. Note that VLC Scheduler does not understand that `.jpeg` and `.jpg` belong to the same file format. Example: `media_extensions: ['.mp4', '.avi', '.jpeg', '.jpg']`. For the default list of extensions see [defaults.py](/src/defaults.py).
 
-`playlist_extensions: [...]` — *(optional)* a list of filename extensions that defines the kinds of **playlist files** that VLC Scheduler should be looking for when scanning the directories listed in `sources`. Note that each filename extension should be prepended with a dot and written in lowercase. Example: `playlist_extensions: ['.xspf', '.m3u']`. For the default list of extensions see [defaults.py](https://github.com/EugeneDae/VLC-Scheduler/blob/master/src/defaults.py).
+`playlist_extensions: [...]` — *(optional)* a list of filename extensions that defines the kinds of **playlist files** that VLC Scheduler should be looking for when scanning the directories listed in `sources`. Note that each filename extension should be prepended with a dot and written in lowercase. Example: `playlist_extensions: ['.xspf', '.m3u']`. For the default list of extensions see [defaults.py](/src/defaults.py).
 
 `ignore_playing_time_if_playlist_is_empty: true/false` — *(optional)* if set to `true`, VLC Scheduler will ignore `playing_time` of the sources if the playlist is empty. Default value: `false`.
 
@@ -126,7 +126,7 @@ If you just want to run VLC Scheduler as a Python script, you can use either Pyt
 
         pip3 install virtualenv
 
-2. [Download and extract the source code](https://github.com/EugeneDae/VLC-Scheduler/archive/master.zip) (or do `git clone`) and `cd` into the directory.
+2. [Download and extract the source code](/archive/master.zip) (or do `git clone`) and `cd` into the directory.
 
 3. Create a new virtual environment and activate it.
 
@@ -170,9 +170,9 @@ Created by **Eugene / Dae** (dae@dae.me).
 
 VLC folder icon by [scafer31000](http://scafer31000.deviantart.com/).
 
-License: MIT, see [LICENSE](https://github.com/EugeneDae/VLC-Scheduler/blob/master/.gitignore).
+License: MIT, see [LICENSE](LICENSE).
 
-Special thanks to:
+**Special thanks to:**
 
 - VideoLAN organization and all of its contributors for creating VLC.
 - Sergey Karnaukhov for testing.
