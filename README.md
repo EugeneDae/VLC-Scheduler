@@ -4,7 +4,7 @@
 
 Do you have a TV screen that plays some media content non-stop? Do you want some of the content to play in the morning, and the rest during the rest of the day? Do you want to add new content to VLC as easily as dragging the file into a folder? VLC Scheduler, which is a tiny companion to the world’s best open source media player VLC, was made exactly for such purposes.
 
-![VLC Scheduler](/docs/screenshot.jpg)
+![VLC Scheduler](/docs/screenshot.png)
 
 VLC Scheduler works with directories rather than individual media files. It scans the directories specified in its configuration file for media content, composes its own playlist and “feeds” it to VLC file-by-file.
 
