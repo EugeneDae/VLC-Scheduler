@@ -9,7 +9,7 @@ VLC = {
     'host': '127.0.0.1',
     'port': 8080,
     'password': 'vlcremote',
-    'extraintf': 'http:luaintf',
+    'extraintf': 'http,luaintf',
     'options': []
 }
 
@@ -22,7 +22,7 @@ SOURCES = []
 
 FILENAME_WITH_A_DATE_PATTERN = '^(\d\d)-(\d\d)-(\d\d\d\d).*'
 
-# All extensions should be in tuples (not lists), lowercase, prepended with a dot
+# All extensions should be lowercase and prepended with a dot
 MEDIA_EXTENSIONS = ('.mp4', '.avi', '.mov', '.mkv', '.webm', '.png', '.jpg')
 PLAYLIST_EXTENSIONS = ('.xspf', )
 

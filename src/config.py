@@ -20,16 +20,22 @@ def locate_yaml_config():
     possible_locations = []
     
     if getattr(sys, 'frozen', False):
-        possible_locations.append(os.path.dirname(sys.executable))
-    else:
-        source_dir = os.path.dirname(os.path.abspath(__file__))
+        exe_dir = os.path.dirname(sys.executable)
         
-        if os.path.basename(source_dir) == 'src':
-            possible_locations.append(os.path.dirname(source_dir))
+        if os.path.basename(exe_dir) == 'MacOS' and sys.platform == 'darwin':
+            possible_locations.append(os.path.join(exe_dir, '..', '..', '..'))
         else:
-            possible_locations.append(source_dir)
+            possible_locations.append(exe_dir)
+    else:
+        src_dir = os.path.dirname(os.path.abspath(__file__))
+        
+        if os.path.basename(src_dir) == 'src':
+            possible_locations.append(os.path.dirname(src_dir))
+        else:
+            possible_locations.append(src_dir)
+        
+        possible_locations.append(os.getcwd())
     
-    possible_locations.append(os.getcwd())
     possible_locations = list(set(possible_locations))
     
     for location in possible_locations:
@@ -61,7 +67,7 @@ def build_config():
     
     for k in [k for k in dir(defaults) if k[0:1].isupper()]:
         new_v = getattr(defaults, k)
-        
+                
         if k.lower() in yaml_config:
             usr_v = yaml_config[k.lower()]
             
@@ -135,10 +141,13 @@ def check_config():
 try:
     initialize()
     check_config()
-except Exception as e:    
-    if config.DEBUG:
-        logger.fatal(traceback.format_exc())
-    else:
+except Exception as e:
+    if not logger:
+        import logging as logger
+    
+    if config and not config.DEBUG:
         logger.fatal(str(e))
+    else:
+        logger.fatal(traceback.format_exc())
     
     sys.exit(1)

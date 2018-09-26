@@ -6,9 +6,7 @@ from watchgod import awatch
 from config import config, logger
 from watchers import VLCSchedulerSourceWatcher
 from playlist import Playlist
-import vlc
-
-VERSION = '0.3.2 (beta)'
+import version, vlc
 
 
 async def watchgod_coro(path, action):
@@ -96,7 +94,7 @@ async def main_coro():
     
     # Setup playlists
     default_playlist_config = {
-        'allowed_extensions': config.MEDIA_EXTENSIONS + config.PLAYLIST_EXTENSIONS,
+        'allowed_extensions': tuple(list(config.MEDIA_EXTENSIONS) + list(config.PLAYLIST_EXTENSIONS)),
         'filename_with_a_date_pattern': config.FILENAME_WITH_A_DATE_PATTERN
     }
     
@@ -187,9 +185,9 @@ async def main_coro():
 
 
 @click.command()
-@click.version_option(VERSION)
+@click.version_option(version.VERSION)
 def main():
-    logger.info('VLC Scheduler v%s started.' % VERSION)
+    logger.info('VLC Scheduler v%s started.' % version.VERSION)
     
     if sys.platform == 'win32':
         loop = asyncio.ProactorEventLoop()
