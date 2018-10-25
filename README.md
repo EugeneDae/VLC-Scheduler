@@ -1,6 +1,6 @@
 # VLC Scheduler
 
-**[DOWNLOAD](https://github.com/EugeneDae/VLC-Scheduler/releases/latest/)** / Windows & macOS / current version: 0.3.2.
+**[DOWNLOAD](https://github.com/EugeneDae/VLC-Scheduler/releases/latest/) / Windows & macOS / current version: 0.3.2.**
 
 Do you have a TV screen that plays media content non-stop? Do you want some of the content to play in the morning, and the rest during the rest of the day? Do you want to add new content to VLC as easily as dragging the file into a folder? VLC Scheduler, which is a tiny companion to the world’s best open source media player VLC, was made exactly for such purposes.
 
