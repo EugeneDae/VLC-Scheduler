@@ -2,7 +2,7 @@
 
 **[DOWNLOAD](https://github.com/EugeneDae/VLC-Scheduler/releases/latest/)** / Windows & macOS / current version: 0.3.2.
 
-Do you have a TV screen that plays some media content non-stop? Do you want some of the content to play in the morning, and the rest during the rest of the day? Do you want to add new content to VLC as easily as dragging the file into a folder? VLC Scheduler, which is a tiny companion to the world’s best open source media player VLC, was made exactly for such purposes.
+Do you have a TV screen that plays media content non-stop? Do you want some of the content to play in the morning, and the rest during the rest of the day? Do you want to add new content to VLC as easily as dragging the file into a folder? VLC Scheduler, which is a tiny companion to the world’s best open source media player VLC, was made exactly for such purposes.
 
 ![VLC Scheduler](/docs/screenshot.png)
 
@@ -63,7 +63,7 @@ Not hard, right? [See also example.yaml](/docs/example.yaml).
 
 **`playing_time: HH:MM-HH:MM`** — *(optional)* the time interval during which the media files from the directory should be played. Use 24-hour clock. Example: `playing_time: 09:00-22:00` (from 9 AM to 10 PM).
 
-**`random: true/false`** — *(optional)* if set to `true`, shuffles the media files from each directory. If set to `false`, VLC Scheduler will get the files in alphabetic order. Default: `false`.
+**`shuffle: true/false`** — *(optional)* if set to `true`, shuffles the media files from each directory. If set to `false`, VLC Scheduler will get the files in alphabetic order. Default: `false`.
 
 **`special: true/false`** — *(optional)* if set to `true`, marks a directory as special. Special directories are meant to stay empty most of the time. When a media file is added to such directory, VLC Scheduler puts aside all non-special content and only plays that file until it’s removed from its directory. Default: `false`.
 

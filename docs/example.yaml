@@ -7,7 +7,7 @@ sources:
       special: True
 
     - path: /Users/<username>/Desktop/Music Videos/
-      random: True
+      shuffle: True
 
     - path: /Users/<username>/Desktop/Safety Instructions/
       play_every_minutes: 30
