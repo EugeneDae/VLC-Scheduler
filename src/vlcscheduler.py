@@ -59,8 +59,11 @@ async def player_coro(player, rebuild_events_queue, extra_items_queue):
                 player.add(item.path)
             
             if play_duration == 0:
-                await asyncio.sleep(0.25)
-                play_duration = player.status().get('length', 0)
+                for i in range(0, 4):
+                    await asyncio.sleep(0.25)
+                    if player.status().get('state', None) == 'playing':
+                        play_duration = player.status().get('length', 0)
+                        break
                 
                 if play_duration <= 0:
                     play_duration = config.IMAGE_PLAY_DURATION
