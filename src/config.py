@@ -134,7 +134,7 @@ def check_config():
                 'single source is currently not supported.'
             )
     
-    if not os.path.isfile(config.VLC['path']):
+    if not os.path.isfile(config.VLC.get('path', "")):
         raise RuntimeError('Invalid path to VLC: %s.' % config.VLC['path'])
 
 
