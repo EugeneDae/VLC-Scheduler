@@ -135,7 +135,7 @@ def check_config():
             )
     
     if not os.path.isfile(config.VLC.get('path', "")):
-        raise RuntimeError('Invalid path to VLC: %s.' % config.VLC['path'])
+        raise RuntimeError('Invalid path to VLC: %s.' % config.VLC.get('path'], None))
 
 
 try:
