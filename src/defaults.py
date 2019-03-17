@@ -17,6 +17,8 @@ if sys.platform.startswith('win'):
     VLC['path'] = r'C:\Program Files\VideoLAN\VLC\vlc.exe'
 elif sys.platform == 'darwin':
     VLC['path'] = '/Applications/VLC.app/Contents/MacOS/VLC'
+else:
+    VLC['path'] = '/usr/bin/vlc'
 
 SOURCES = []
 
