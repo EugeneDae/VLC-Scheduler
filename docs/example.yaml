@@ -16,7 +16,10 @@ sources:
 source_mixing_function: 'zip_equally'
 
 # optional
-media_extensions: ['.mp4', '.avi', '.jpeg', '.jpg']
+media_extensions: ['.mp4', '.avi', '.mov', '.mkv', '.webm', '.png', '.jpg']
+
+# optional
+media_recursive: False
 
 # optional
 playlist_extensions: ['.xspf', '.m3u']

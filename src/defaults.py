@@ -26,10 +26,12 @@ FILENAME_WITH_A_DATE_PATTERN = '^(\d\d)-(\d\d)-(\d\d\d\d).*'
 
 # All extensions should be lowercase and prepended with a dot
 MEDIA_EXTENSIONS = ('.mp4', '.avi', '.mov', '.mkv', '.webm', '.png', '.jpg')
-PLAYLIST_EXTENSIONS = ('.xspf', )
+PLAYLIST_EXTENSIONS = ('.xspf', '.m3u')
 
 SOURCE_MIXING_FUNCTION = 'zip_equally'
 
 IGNORE_PLAYING_TIME_IF_PLAYLIST_IS_EMPTY = False
 
 IMAGE_PLAY_DURATION = 60
+
+MEDIA_RECURSIVE = False

@@ -97,16 +97,16 @@ async def main_coro():
         'allowed_extensions': tuple(list(config.MEDIA_EXTENSIONS) + list(config.PLAYLIST_EXTENSIONS)),
         'filename_with_a_date_pattern': config.FILENAME_WITH_A_DATE_PATTERN
     }
-    
+
     primary_playlist = Playlist(
-        name='PRIMARY', **default_playlist_config,
+        name='PRIMARY', **default_playlist_config, recursive=config.MEDIA_RECURSIVE,
         ignore_playing_time_if_empty=config.IGNORE_PLAYING_TIME_IF_PLAYLIST_IS_EMPTY
     )
     special_playlist = Playlist(
-        name='SPECIAL', **default_playlist_config
+        name='SPECIAL', **default_playlist_config, recursive=config.MEDIA_RECURSIVE
     )
     adverts_playlist = Playlist(
-        name='ADS', **default_playlist_config,
+        name='ADS', **default_playlist_config, recursive=config.MEDIA_RECURSIVE,
         source_mixing_function='chain'
     )
     

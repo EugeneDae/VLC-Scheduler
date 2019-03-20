@@ -65,6 +65,8 @@ Not hard, right? [See also example.yaml](/docs/example.yaml).
 
 **`shuffle: true/false`** — *(optional)* if set to `true`, shuffles the media files from each directory. If set to `false`, VLC Scheduler will get the files in alphabetic order. Default: `false`.
 
+**`recursive: true/false`** — *(optional)* if set to `true`, recurses into subfolders of each directory. Default is value of global config media_recursive which is itself defaulted to `false`.
+
 **`special: true/false`** — *(optional)* if set to `true`, marks a directory as special. Special directories are meant to stay empty most of the time. When a media file is added to such directory, VLC Scheduler puts aside all non-special content and only plays that file until it’s removed from its directory. Default: `false`.
 
 **`item_play_duration: seconds`**— *(optional)* how much screen time each media file (an image or a video) should be given.
@@ -82,6 +84,8 @@ Example: `item_play_duration: 120` (120 seconds = 2 minutes).
 **`source_mixing_function: "function_name"`** — *(optional)* If you don’t want VLC Scheduler to ensure equal occurrence of the sources in the playlist, change this to `chain`. Default value: `zip_equally`.
 
 **`media_extensions: [...]`** — *(optional)* a list of filename extensions that defines the kinds of **media files** that VLC Scheduler should be looking for when scanning the directories listed in `sources`. Note that each filename extension should be prepended with a dot and written in lowercase. Note that VLC Scheduler does not understand that `.jpeg` and `.jpg` belong to the same file format. Example: `media_extensions: ['.mp4', '.avi', '.jpeg', '.jpg']`. For the default list of extensions see [defaults.py](/src/defaults.py).
+
+**`media_recursive: true/false`** — *(optional)* sets the default value for recursion of all sources. Default: `false`
 
 **`playlist_extensions: [...]`** — *(optional)* a list of filename extensions that defines the kinds of **playlist files** that VLC Scheduler should be looking for when scanning the directories listed in `sources`. Note that each filename extension should be prepended with a dot and written in lowercase. Example: `playlist_extensions: ['.xspf', '.m3u']`. For the default list of extensions see [defaults.py](/src/defaults.py).
 
