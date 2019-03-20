@@ -5,7 +5,7 @@ import utils
 
 class Playlist:
     def __init__(self, sources=[], name='Untitled', allowed_extensions=[],
-                 source_mixing_function='zip_equally',
+                 source_mixing_function='zip_equally', recursive=False, 
                  filename_with_a_date_pattern='^(\d\d)-(\d\d)-(\d\d\d\d).*',
                  ignore_playing_time_if_empty=False):
         
@@ -17,6 +17,7 @@ class Playlist:
         self._allowed_extensions = allowed_extensions
         self._filename_with_a_date_regex = re.compile(filename_with_a_date_pattern)
         self._ignore_playing_time_if_empty = ignore_playing_time_if_empty
+        self._recursive = recursive
         
         # self._source_mixing_function
         if source_mixing_function == 'zip_equally':
@@ -31,6 +32,7 @@ class Playlist:
             active=True,
             path=source['path'],
             shuffle=bool(source.get('shuffle', False)),
+            recursive=bool(source.get('recursive', self._recursive)),
             item_play_duration=int(source.get('item_play_duration', 0)),
             play_every_minutes=int(source.get('play_every_minutes', 0)),
             start_time=None,
@@ -79,7 +81,7 @@ class Playlist:
     
     def get_source_contents(self, source):
         paths = list(utils.list_files_with_extensions(
-            source.path, self._allowed_extensions
+            source.path, self._allowed_extensions, recursive=source.recursive
         ))
         
         if source.shuffle:
