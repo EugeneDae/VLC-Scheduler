@@ -9,7 +9,7 @@ def list_files_with_extensions(path, extensions, recursive=False):
     for entry in os.scandir(path):
         if entry.name.lower().endswith(extensions) and entry.is_file():
             yield entry.path
-        elif entry.is_dir and recursive is True:
+        elif entry.is_dir() and recursive is True:
             yield from list_files_with_extensions(entry.path, extensions, recursive)
 
 
