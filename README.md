@@ -36,6 +36,8 @@ You can share a directory with TV screen content over the local network (for exa
 
 vlcscheduler.yaml must reside at the same level as the program itself. *(Advanced users, who want to move the configuration file to another location, should set the environment variable `VLCSCHEDULER_YAML` to the full path that includes the filename of the configuration file)*.
 
+*macOS High Sierra/Mojave users: if you're getting the following error: `FileNotFoundError: Cannot find <...> vlcscheduler.yaml in any of these places: <...>/T/AppTranslocation/<...>`, [see the solution here](https://github.com/EugeneDae/VLC-Scheduler/issues/11#issuecomment-491338627).*
+
 The configuration must be expressed in YAML — if you don’t know anything about this format, [read up on it a bit](https://docs.ansible.com/ansible/latest/reference_appendices/YAMLSyntax.html).
 
 The only required parameter is `sources`. In VLC Scheduler’s terms, a **source** is a path to the directory with media files, followed by the parameters that define how VLC Scheduler should play those media files.
