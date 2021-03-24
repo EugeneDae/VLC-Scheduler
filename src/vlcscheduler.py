@@ -8,6 +8,7 @@ from watchers import VLCSchedulerSourceWatcher
 from playlist import Playlist
 import version, vlc
 
+import requests
 
 async def watchgod_coro(path, action):
     async for changes in awatch(path, watcher_cls=VLCSchedulerSourceWatcher, debounce=3600):
@@ -21,7 +22,7 @@ async def schedule_coro():
         await asyncio.sleep(1)
 
 
-async def player_coro(player, rebuild_events_queue, extra_items_queue):
+async def player_coro(player, rebuild_events_queue, extra_items_queue, ping_urls=None):
     playlist = None
     
     while True:
@@ -64,9 +65,18 @@ async def player_coro(player, rebuild_events_queue, extra_items_queue):
                 
                 if play_duration <= 0:
                     play_duration = config.IMAGE_PLAY_DURATION
-            
+
             if item.path != current_item_path:
                 logger.info('Playing %s for %i seconds.' % (item.path, play_duration))
+                for ping_url in ping_urls:
+                    name = os.path.basename(item.path) 
+                    try:
+                        r = requests.post(ping_url, json={"name":name})
+                    except requests.exceptions.RequestException as e:
+                        logger.error('PING_URL failed={0} url={1}'.format(e, ping_url))
+                    else:
+                        if r.status_code != requests.codes.created:
+                            logger.error('PING_URL status={0} url={1}'.format(r.status_code, ping_url))
                 current_item_path = item.path
             
             finished, pending = await asyncio.wait(
@@ -109,7 +119,7 @@ async def main_coro():
         name='ADS', **default_playlist_config, recursive=config.MEDIA_RECURSIVE,
         source_mixing_function='chain'
     )
-    
+
     for source in config.SOURCES:
         if source.get('play_every_minutes'):
             adverts_playlist.add_source(source)
@@ -175,7 +185,7 @@ async def main_coro():
     # Setup coroutines
     tasks = [
         launcher.watch_exit(), schedule_coro(),
-        player_coro(player, rebuild_events_queue, periodic_items_queue)
+        player_coro(player, rebuild_events_queue, periodic_items_queue, config.PING_URLS)
     ]
     
     for source in config.SOURCES:

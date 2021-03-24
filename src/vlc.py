@@ -82,11 +82,12 @@ class VLCLauncher:
 
 
 class VLCHTTPClient:
-    def __init__(self, config):
+    def __init__(self, config, ping_urls=None):
         self.session = requests.session()
         self.base_url = 'http://' + config['host'] + ':' + str(config['port'])
         self.session.auth = ('', config['password'])
-    
+        self.ping_urls = ping_urls
+
     def _request(self, path, **kwargs):
         resp = self.session.get(urljoin(self.base_url, path), **kwargs)
         
@@ -102,7 +103,7 @@ class VLCHTTPClient:
         # https://forum.videolan.org/viewtopic.php?f=16&t=145695
         params = ('command=' + command + '&' +
                   '&'.join('%s=%s' % (k, v) for k, v in params.items()))
-        
+
         return self._request('requests/status.xml', params=params)
     
     def _format_uri(self, uri):

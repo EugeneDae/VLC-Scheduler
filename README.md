@@ -19,6 +19,7 @@ You can share a directory with TV screen content over the local network (for exa
 - **Supports images (JPEG, PNG...)** Use `image_play_duration` or `item_play_duration` to control for how long they should be shown.
 - **Supports live streams.** Turn your TV screen into a “digital window” that shows the live picture from various places around the world. Show a live stream, then in five minutes switch to a video on the hard drive, then show another live stream and so on — VLC Scheduler can arrange that. (See [docs/dam-square.xspf](/docs/dam-square.xspf)).
 - **Show content every X minutes** — useful for ads, commercials, safety instructions etc, that you don’t want to show too often.
+- **Ping logging sites** — sends the filename to the URL(s) of your choice. Useful for logging and "recently played" websites.
 - Written in Python, VLC Scheduler can be used on Windows, macOS and Linux. The binaries for Windows and macOS are provided for download. Linux users should see **Running & building the script**.
 
 ### Caveats
@@ -96,6 +97,8 @@ Example: `item_play_duration: 120` (120 seconds = 2 minutes).
 **`image_play_duration: seconds`** — *(optional)* how long an image should be displayed on the screen if `item_play_duration` is not set for the source. Default value: `60`.
 
 **`vlc`** — *(optional)* a dictionary of VLC-related parameters.
+
+**`ping_urls`** — *(optional)* a list of URLs to ping with the filename being started. Sends a JSON body as an HTTP POST. The JSON is simply `{"name": "FILE_PATH"}`.
 
 ```
 vlc:
