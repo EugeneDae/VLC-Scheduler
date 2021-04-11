@@ -93,12 +93,7 @@ async def player_coro(player, rebuild_events_queue, extra_items_queue, ping_urls
                             logger.error('PING_URL status={0} url={1}'.format(r.status_code, ping_url))
                 current_item_path = item.path
             
-            finished, pending = await asyncio.wait([
-                asyncio.create_task(asyncio.sleep(play_duration)),
-                asyncio.create_task(rebuild_events_queue.get())
-                ]),
-                return_when=asyncio.FIRST_COMPLETED
-            )
+            finished, pending = await asyncio.wait([asyncio.create_task(asyncio.sleep(play_duration)), asyncio.create_task(rebuild_events_queue.get())]), return_when=asyncio.FIRST_COMPLETED)
             
             for task in finished:
                 result = task.result()
