@@ -58,8 +58,22 @@ async def player_coro(player, rebuild_events_queue, extra_items_queue, ping_urls
                     player.empty()
                 
                 player.add(item.path)
-            
+
+            if play_duration < 0:
+                # <0 means play the first abs(play_duration) seconds.
+                # The next time it will start from the start OR if you
+                # change VLC's "Continue?" to "Always" it will start
+                # from where it left off, then repeat at the start,
+                # for a total of .abs(play_duration) seconds.
+                # If the length can't be determined, default to abs(play_duration).
+                await asyncio.sleep(0.25)
+                actual_duration = player.status().get('length', 0)
+                if actual_duration <= 0:
+                    actual_duration = config.IMAGE_PLAY_DURATION
+                play_duration = min(actual_duration, -play_duration)
+
             if play_duration == 0:
+                # 0 means "play until it done"
                 await asyncio.sleep(0.25)
                 play_duration = player.status().get('length', 0)
                 
