@@ -141,6 +141,9 @@ def check_config():
 try:
     initialize()
     check_config()
+except RuntimeError as e:
+    print("Error: {0}".format(e))
+    sys.exit(1)
 except Exception as e:
     if not logger:
         import logging as logger

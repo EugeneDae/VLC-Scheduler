@@ -8,6 +8,7 @@ from watchers import VLCSchedulerSourceWatcher
 from playlist import Playlist
 import version, vlc
 
+import requests
 
 async def watchgod_coro(path, action):
     async for changes in awatch(path, watcher_cls=VLCSchedulerSourceWatcher, debounce=3600):
@@ -21,7 +22,7 @@ async def schedule_coro():
         await asyncio.sleep(1)
 
 
-async def player_coro(player, rebuild_events_queue, extra_items_queue):
+async def player_coro(player, rebuild_events_queue, extra_items_queue, ping_urls=None):
     playlist = None
     
     while True:
@@ -57,22 +58,46 @@ async def player_coro(player, rebuild_events_queue, extra_items_queue):
                     player.empty()
                 
                 player.add(item.path)
-            
+
+            if play_duration < 0:
+                # <0 means play the first abs(play_duration) seconds.
+                # The next time it will start from the start OR if you
+                # change VLC's "Continue?" to "Always" it will start
+                # from where it left off, then repeat at the start,
+                # for a total of .abs(play_duration) seconds.
+                # If the length can't be determined, default to abs(play_duration).
+                await asyncio.sleep(0.25)
+                actual_duration = player.status().get('length', 0)
+                if actual_duration <= 0:
+                    actual_duration = config.IMAGE_PLAY_DURATION
+                play_duration = min(actual_duration, -play_duration)
+
             if play_duration == 0:
+                # 0 means "play until it done"
                 await asyncio.sleep(0.25)
                 play_duration = player.status().get('length', 0)
                 
                 if play_duration <= 0:
                     play_duration = config.IMAGE_PLAY_DURATION
-            
+
             if item.path != current_item_path:
                 logger.info('Playing %s for %i seconds.' % (item.path, play_duration))
+                for ping_url in ping_urls:
+                    name = os.path.basename(item.path) 
+                    try:
+                        r = requests.post(ping_url, json={"name":name})
+                    except requests.exceptions.RequestException as e:
+                        logger.error('PING_URL failed={0} url={1}'.format(e, ping_url))
+                    else:
+                        if r.status_code != requests.codes.created:
+                            logger.error('PING_URL status={0} url={1}'.format(r.status_code, ping_url))
                 current_item_path = item.path
             
-            finished, pending = await asyncio.wait(
-                [asyncio.sleep(play_duration), rebuild_events_queue.get()],
-                return_when=asyncio.FIRST_COMPLETED
-            )
+            finished, pending = await asyncio.wait([
+                asyncio.create_task(asyncio.sleep(play_duration)),
+                asyncio.create_task(rebuild_events_queue.get())
+                ],
+                return_when=asyncio.FIRST_COMPLETED)
             
             for task in finished:
                 result = task.result()
@@ -109,7 +134,7 @@ async def main_coro():
         name='ADS', **default_playlist_config, recursive=config.MEDIA_RECURSIVE,
         source_mixing_function='chain'
     )
-    
+
     for source in config.SOURCES:
         if source.get('play_every_minutes'):
             adverts_playlist.add_source(source)
@@ -175,7 +200,7 @@ async def main_coro():
     # Setup coroutines
     tasks = [
         launcher.watch_exit(), schedule_coro(),
-        player_coro(player, rebuild_events_queue, periodic_items_queue)
+        player_coro(player, rebuild_events_queue, periodic_items_queue, config.PING_URLS)
     ]
     
     for source in config.SOURCES:

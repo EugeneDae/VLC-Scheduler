@@ -19,6 +19,7 @@ You can share a directory with TV screen content over the local network (for exa
 - **Supports images (JPEG, PNG...)** Use `image_play_duration` or `item_play_duration` to control for how long they should be shown.
 - **Supports live streams.** Turn your TV screen into a “digital window” that shows the live picture from various places around the world. Show a live stream, then in five minutes switch to a video on the hard drive, then show another live stream and so on — VLC Scheduler can arrange that. (See [docs/dam-square.xspf](/docs/dam-square.xspf)).
 - **Show content every X minutes** — useful for ads, commercials, safety instructions etc, that you don’t want to show too often.
+- **Ping logging sites** — sends the filename to the URL(s) of your choice. Useful for logging and "recently played" websites.
 - Written in Python, VLC Scheduler can be used on Windows, macOS and Linux. The binaries for Windows and macOS are provided for download. Linux users should see **Running & building the script**.
 
 ### Caveats
@@ -61,6 +62,8 @@ Not hard, right? [See also example.yaml](/docs/example.yaml).
 
 #### Per source configuration
 
+These parameters are set for each source individually.
+
 **`path`** — *(required)* absolute path to the directory with media files. `~/` and variables are not supported.
 
 **`playing_time: HH:MM-HH:MM`** — *(optional)* the time interval during which the media files from the directory should be played. Use 24-hour clock. Example: `playing_time: 09:00-22:00` (from 9 AM to 10 PM).
@@ -73,15 +76,23 @@ Not hard, right? [See also example.yaml](/docs/example.yaml).
 
 **`item_play_duration: seconds`**— *(optional)* how much screen time each media file (an image or a video) should be given.
 
-- If `item_play_duration` is not set, each video will play until the end and each image will play for the time defined by `image_play_duration` (which is — by default — 60 seconds). Note that `image_play_duration` is a top-level (general) parameter.
-- If a video is shorter than `item_play_duration`, it’ll play over again until `item_play_duration` runs out.
-- If a video is longer than `item_play_duration`, it’ll play only until `item_play_duration` runs out. When it comes up again in the playlist, it’ll play from the start — unless VLC is configured to [continue playback without asking](https://www.vlchelp.com/restart-continue-playback-ask/).
+- If `item_play_duration` is not set (or set to 0), each video will play until the end and each image will play for the time defined by `image_play_duration` (which is — by default — 60 seconds).
+- If `item_play_duration` is > 0:
+  - If a video is shorter than `item_play_duration`, it’ll play over again until `item_play_duration` runs out.
+  - If a video is longer than `item_play_duration`, it’ll play only until `item_play_duration` runs out. When it comes up again in the playlist, it’ll play from the start — unless VLC is configured to [continue playback without asking](https://www.vlchelp.com/restart-continue-playback-ask/).
+- If `item_play_duration` is < 0 (a negative number, such as `-600`:
+  - The sign will be ignored (i.e. `-600` will be treated like `600`).
+  - If a video is shorter than `abs(item_play_duration)`, it will play once.
+  - Otherwise, it will act as usual.
+- Note that `image_play_duration` is a top-level (general) parameter.
 
 Example: `item_play_duration: 120` (120 seconds = 2 minutes).
 
 **`play_every_minutes: minutes`** — *(optional)* the content will be played only after X minutes. Such content is internally referred to as “ads”. If there is no content other than the “ads”, VLC Scheduler won’t play anything. VLC Scheduler doesn’t “pause” the currently playing media file to play “ads” — instead it waits for the media file to complete. The use of this parameter in conjunction with `special: true` is not supported. Example: `play_every_minutes: 30`.
 
 #### General configuration
+
+These parameters are set globally.
 
 **`source_mixing_function: "function_name"`** — *(optional)* If you don’t want VLC Scheduler to ensure equal occurrence of the sources in the playlist, change this to `chain`. Default value: `zip_equally`.
 
@@ -96,6 +107,8 @@ Example: `item_play_duration: 120` (120 seconds = 2 minutes).
 **`image_play_duration: seconds`** — *(optional)* how long an image should be displayed on the screen if `item_play_duration` is not set for the source. Default value: `60`.
 
 **`vlc`** — *(optional)* a dictionary of VLC-related parameters.
+
+**`ping_urls`** — *(optional)* a list of URLs to ping with the filename being started. Sends a JSON body as an HTTP POST. The JSON is simply `{"name": "FILE_PATH"}`.
 
 ```
 vlc:
